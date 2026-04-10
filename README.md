@@ -49,7 +49,8 @@ hisat2-build Arabidopsis_thaliana.TAIR10.dna.toplevel.fa Arabidopsis_thaliana.TA
 hisat2 -p 8 -x Arabidopsis_thaliana.TAIR10.dna.toplevel -1 SRR_rmrRNA.fastq.1.gz -2 SRR_rmrRNA.fastq.2.gz | samtools view -Sb > SRR.bam
 ```
 >Single-End
-```hisat2 -p 8 -x Arabidopsis_thaliana.TAIR10.dna.toplevel -U SRR_rmrRNA.fastq.gz | samtools view -Sb > SRR.bam
+```
+hisat2 -p 8 -x Arabidopsis_thaliana.TAIR10.dna.toplevel -U SRR_rmrRNA.fastq.gz | samtools view -Sb > SRR.bam
 ```
 >Sort
 ```
