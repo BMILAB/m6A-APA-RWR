@@ -11,51 +11,86 @@ In this study, the RWR algorithm fully leverages existing protein interaction da
 # 1.Data quality control and preprocessing
 In this step, **fastp** is used to perform quality control on the raw data, automatically removing adapters and low‑quality bases.
 >Paired-End
-`fastp -i *_1.fastq -o out_SRR_1.fastq -I {}_2.fastq -O out_SRR_2.fastq`
+```
+fastp -i *_1.fastq -o out_SRR_1.fastq -I {}_2.fastq -O out_SRR_2.fastq
+```
 >Single-End
-`fastp -i SRR_1.fastq -o out_SRR_1.fastq`
+```
+fastp -i SRR_1.fastq -o out_SRR_1.fastq
+```
 >Quality assessment
-`fastqc -t 12 out_*.fastq`
+```
+fastqc -t 12 out_*.fastq
+```
 
 # 2.rRNA removal
 The quality-controlled reads are aligned to the rRNA reference library using **bowtie2**, and the unaligned reads are retained for subsequent poly(A) site identification.
 >Build rRNA index
-`bowtie2-build Arabidopsis_rRNA.fasta Arabidopsis_rRNA`
+```
+bowtie2-build Arabidopsis_rRNA.fasta Arabidopsis_rRNA
+```
 >Paired-End
-`bowtie2 -x Arabidopsis_rRNA --un-conc-gz SRR_rmrRNA.fastq.gz -1 out_SRR_1.fastq -2 out_SRR_2.fastq -p 8 -S SRR_rRNA.sam`
+```
+bowtie2 -x Arabidopsis_rRNA --un-conc-gz SRR_rmrRNA.fastq.gz -1 out_SRR_1.fastq -2 out_SRR_2.fastq -p 8 -S SRR_rRNA.sam
+```
 >Single-End
-`bowtie2 -x Arabidopsis_rRNA --un-gz SRR_rmrRNA.fastq.gz -U out_SRR.fastq -p 8 -S SRR_rRNA.sam`
+```
+bowtie2 -x Arabidopsis_rRNA --un-gz SRR_rmrRNA.fastq.gz -U out_SRR.fastq -p 8 -S SRR_rRNA.sam
+```
 
 # 3.Genome alignment
 The rRNA‑removed reads are aligned to the *Arabidopsis thaliana* reference genome using **HISAT2**.
 >Build index
-`hisat2-build Arabidopsis_thaliana.TAIR10.dna.toplevel.fa Arabidopsis_thaliana.TAIR10.dna.toplevel`
+```
+hisat2-build Arabidopsis_thaliana.TAIR10.dna.toplevel.fa Arabidopsis_thaliana.TAIR10.dna.toplevel
+```
 >Paired-End
-`hisat2 -p 8 -x Arabidopsis_thaliana.TAIR10.dna.toplevel -1 SRR_rmrRNA.fastq.1.gz -2 SRR_rmrRNA.fastq.2.gz | samtools view -Sb > SRR.bam`
+```
+hisat2 -p 8 -x Arabidopsis_thaliana.TAIR10.dna.toplevel -1 SRR_rmrRNA.fastq.1.gz -2 SRR_rmrRNA.fastq.2.gz | samtools view -Sb > SRR.bam
+```
 >Single-End
-`hisat2 -p 8 -x Arabidopsis_thaliana.TAIR10.dna.toplevel -U SRR_rmrRNA.fastq.gz | samtools view -Sb > SRR.bam`
+```hisat2 -p 8 -x Arabidopsis_thaliana.TAIR10.dna.toplevel -U SRR_rmrRNA.fastq.gz | samtools view -Sb > SRR.bam
+```
 >Sort
-`samtools sort SRR.bam -o SRR.sorted.bam`
+```
+samtools sort SRR.bam -o SRR.sorted.bam
+```
 >Index
-`samtools index -b  {}.sorted.bam`
+```
+samtools index -b  {}.sorted.bam
+```
 
 # 4.Poly(A) Site Quantification
 In this step, identify and quantify poly(A) sites using **QAPA**.
 >GENCODE gene prediction annotation file
-`gtfToGenePred -genePredExt Arabidopsis_thaliana.TAIR10.59.gtf Arabidopsis_thaliana.genePred`
+```
+gtfToGenePred -genePredExt Arabidopsis_thaliana.TAIR10.59.gtf Arabidopsis_thaliana.genePred
+```
 >Construct 3' UTR library
-`qapa build --db ensembl_identifiers.txt -o arabidopsis.bed Arabidopsis_thaliana.genePred > output_utrs.bed`
+```
+qapa build --db ensembl_identifiers.txt -o arabidopsis.bed Arabidopsis_thaliana.genePred > output_utrs.bed
+```
 >Extract sequences and build index using a transcript quantification tool
-`qapa fasta -f Arabidopsis_thaliana.TAIR10.dna.toplevel.fa ouput_utrs.bed output_sequences.fa`
+```
+qapa fasta -f Arabidopsis_thaliana.TAIR10.dna.toplevel.fa ouput_utrs.bed output_sequences.fa
+```
 >Build index
-`salmon index -t output_sequences.fa -i utr_library`
->Calculate the relative usage of alternative 3′ UTR isoforms. Input data are required for the extraction of poly(A) sites
+```
+salmon index -t output_sequences.fa -i utr_library
+```
+Calculate the relative usage of alternative 3′ UTR isoforms. Input data are required for the extraction of poly(A) sites
 >Paired-End
-`salmon quant -l A -i utr_library --validateMappings -1 outSRR_1.fastq -2 outSRR_2.fastq -o salmon_SRR`
+```
+salmon quant -l A -i utr_library --validateMappings -1 outSRR_1.fastq -2 outSRR_2.fastq -o salmon_SRR
+```
 >Single-End
-`salmon quant -l ISR -i utr_library --validateMappings -r outSRR_1.fastq -o salmon_SRR`
->Create a folder named `project`, and create subdirectories `sample1`, `sample2`, `sample3`, `sample4` under it (create as many folders as there are samples).Place the `quant.sf` files from the Salmon quantification results of the corresponding replicates into the `sample1`, `sample2`, `sample3`, `sample4` folders respectively.
-`qapa quant --db ensembl_identifiers.txt  project/sample*/quant.sf > QAPAresults.txt`
+```
+salmon quant -l ISR -i utr_library --validateMappings -r outSRR_1.fastq -o salmon_SRR
+```
+Create a folder named `project`, and create subdirectories `sample1`, `sample2`, `sample3`, `sample4` under it (create as many folders as there are samples).Place the `quant.sf` files from the Salmon quantification results of the corresponding replicates into the `sample1`, `sample2`, `sample3`, `sample4` folders respectively.
+```
+qapa quant --db ensembl_identifiers.txt  project/sample*/quant.sf > QAPAresults.txt
+```
 
 # 5.Example codes
 
