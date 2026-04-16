@@ -3,6 +3,9 @@ library(foreach)
 library(doParallel)
 library(Matrix)
 
+PCC_list <- read.csv("PCC_results(PCC>0).csv")
+net <- read.csv("PPI.csv")
+
 # Generate a random network. 
 # Input: adjacency matrix adj_matrix, number of rewiring attempts per edge Q, and number of random networks to generate n_random.
 generate_random_networks <- function(adj_matrix, n_random = 20, Q = 10, nThreads = 1) {
@@ -87,9 +90,8 @@ build_adjacency_matrix <- function(net) {
   return(adj.mat)
 }
 
-adj.mat <- build_adjacency_matrix(net = TAIR_net)
-
-random_TAIR <- generate_random_networks(adj.mat, Q = 100, n_random = 100, nThreads = 10)
+adj.mat <- build_adjacency_matrix(net = net)
+random_net <- generate_random_networks(adj.mat, Q = 100, n_random = 100, nThreads = 10)
 
 # Define the smoothRWR function.
 smoothRWR <- function(pcc, network, gamma = 0.7, nThreads = 1) {
@@ -183,13 +185,10 @@ calculate_p_values_t_test <- function(seed_genes, pcc_values, original_network, 
 
 
 # Example data.
-gene_list <- TAIR_pcc
-
-original_network <- TAIR_net
-
-random_networks <- random_TAIR
-
-TAIR_rwr_ <- calculate_p_values_t_test(
+gene_list <- PCC_list
+original_network <- net
+random_networks <- random_net
+RWR_result <- calculate_p_values_t_test(
   seed_genes = gene_list$gene,
   pcc_values = gene_list$pcc,
   original_network = original_network,
