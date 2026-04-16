@@ -93,7 +93,7 @@ Create a folder named `project`, and create subdirectories `sample1`, `sample2`,
 qapa quant --db ensembl_identifiers.txt  project/sample*/quant.sf > QAPAresults.txt
 ```
 ```
-project/
+APA_data/
 ├── QAPAresults.txt
 └── project/
     ├── sample1/quant.sf
@@ -118,12 +118,14 @@ Please ensure that the following core packages are installed before running the 
 
 ## m6A-peak.R
 Input the quality-controlled and aligned MeRIP-seq data, and use **exomePeak** to identify m⁶A modifications.
+
 **Required input files**
 - Sorted BAM files for IP and input libraries
 - Gene annotation GTF file
 
 ## m6A-APA-list.R
 Calculate the sets of differentially m⁶A-modified (DM) genes and differentially polyadenylated (DP) genes.
+
 **Required input files**
 - QAPAresults.txt
 - project/sample*/quant.sf
@@ -132,20 +134,27 @@ Calculate the sets of differentially m⁶A-modified (DM) genes and differentiall
 
 ## Calculate-PCC.R
 Calculate the correlation between DM and DP genes to determine the seed genes.
+
 **Required input files**
+
 Merge the lists of differential APA and m⁶A sites across all samples
+
 - DEapa_list.csv
 - DEm6a_list.csv
 
 ## RWR.R
 Identify genes regulated by m⁶A in APA using the Random Walk with Restart (RWR) algorithm.
+
 **Required input files**
+
 Retain the seed genes and their PCC values, as well as other DM-DP genes.
+
 - seed gene.csv
 - PPI network
 
 ## Regulatory network.R
 This code is used to construct the regulatory network.
+
 **Required input objects**
 - PPI network
 - miRNA–gene regulatory relationships
@@ -153,6 +162,7 @@ This code is used to construct the regulatory network.
 
 ## ATF network.R
 This code is used to calculate the correlation between ATF and RUD and construct the regulatory network.
+
 **Required input objects**
 - ATF-Gene correlation table
 - PPI network
@@ -160,11 +170,13 @@ This code is used to calculate the correlation between ATF and RUD and construct
 
 ##  Sample specificity (group).R
 To analyze sample specificity, cluster and group based on the correlation of m6APAreg genes within the samples. 
+
 **Required input objects**
 - Condition-specific m6APAreg gene correlation matrix
 
 ## Sample specificity (upset).R
 Analyze the genes that specifically appear in different samples.
+
 **Required input objects**
 - Condition-specific m6APAreg gene correlation matrix
 
