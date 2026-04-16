@@ -12,7 +12,7 @@ In this study, the RWR algorithm fully leverages existing protein interaction da
 In this step, **fastp** is used to perform quality control on the raw data, automatically removing adapters and low‑quality bases.
 >Paired-End
 ```
-fastp -i *_1.fastq -o out_SRR_1.fastq -I {}_2.fastq -O out_SRR_2.fastq
+fastp -i SRR_1.fastq -o out_SRR_1.fastq -I SRR_2.fastq -O out_SRR_2.fastq
 ```
 >Single-End
 ```
@@ -58,7 +58,7 @@ samtools sort SRR.bam -o SRR.sorted.bam
 ```
 >Index
 ```
-samtools index -b  {}.sorted.bam
+samtools index -b SRR.sorted.bam
 ```
 
 # 4.Poly(A) Site Quantification
@@ -92,31 +92,79 @@ Create a folder named `project`, and create subdirectories `sample1`, `sample2`,
 ```
 qapa quant --db ensembl_identifiers.txt  project/sample*/quant.sf > QAPAresults.txt
 ```
-
+```
+project/
+├── QAPAresults.txt
+└── project/
+    ├── sample1/quant.sf
+    ├── sample2/quant.sf
+    ├── sample3/quant.sf
+    └── sample4/quant.sf
+```
 # 5.Example codes
+## Software requirements
+The workflow was tested in the following R environment:
+- **R version**: 4.4.3
+
+### Required R packages
+Please ensure that the following core packages are installed before running the scripts.
+- m6Aexpress 0.1.2
+- Guitar 2.22.0
+- movAPA 0.2.0
+- foreach 1.5.2
+- doParallel 1.0.17
+- Matrix 1.7-4
+- UpSetR 1.4.0
 
 ## m6A-peak.R
 Input the quality-controlled and aligned MeRIP-seq data, and use **exomePeak** to identify m⁶A modifications.
+**Required input files**
+- Sorted BAM files for IP and input libraries
+- Gene annotation GTF file
 
 ## m6A-APA-list.R
 Calculate the sets of differentially m⁶A-modified (DM) genes and differentially polyadenylated (DP) genes.
+**Required input files**
+- QAPAresults.txt
+- project/sample*/quant.sf
+- Gene annotation GTF file
+- peak_info.rda
 
 ## Calculate-PCC.R
 Calculate the correlation between DM and DP genes to determine the seed genes.
+**Required input files**
+Merge the lists of differential APA and m⁶A sites across all samples
+- DEapa_list.csv
+- DEm6a_list.csv
 
 ## RWR.R
 Identify genes regulated by m⁶A in APA using the Random Walk with Restart (RWR) algorithm.
+**Required input files**
+Retain the seed genes and their PCC values, as well as other DM-DP genes.
+- seed gene.csv
+- PPI network
 
 ## Regulatory network.R
 This code is used to construct the regulatory network.
+**Required input objects**
+- PPI network
+- miRNA–gene regulatory relationships
+- m6APAreg gene list
 
 ## ATF network.R
 This code is used to calculate the correlation between ATF and RUD and construct the regulatory network.
+**Required input objects**
+- ATF-Gene correlation table
+- PPI network
+- m6APAreg gene list
 
 ##  Sample specificity (group).R
 To analyze sample specificity, cluster and group based on the correlation of m6APAreg genes within the samples. 
+**Required input objects**
+- Condition-specific m6APAreg gene correlation matrix
 
 ## Sample specificity (upset).R
 Analyze the genes that specifically appear in different samples.
-
+**Required input objects**
+- Condition-specific m6APAreg gene correlation matrix
 
